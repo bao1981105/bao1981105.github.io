@@ -1,0 +1,18 @@
+---
+title:  "Visuals"
+date:   2020-02-25 
+tags: [Visuals]
+
+excerpt: "Visuals from several hackathons"
+---
+
+Feb 22 Brown Datathon: the goal is to predict the existence and the number of home buyers at ZIP level. Starting from a cluster analysis.
+
+***
+![](https://i.ibb.co/1vTR258/zip.png)
+
+
+Jan 27 Hack@Brown: seefit, your virtual fitness coach, an app built on OpenCV and TensorFlow. Best real world application prize winner. 
+
+***
+Find out our project at [devpost](https://devpost.com/software/seefit)
