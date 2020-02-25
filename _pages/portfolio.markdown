@@ -1,7 +1,7 @@
 ---
 layout: archive
 title: Data Science Portfolio
-permalink: /Portfolio/
+permalink: /portfolio/
 author_profile: true
 ---
 
