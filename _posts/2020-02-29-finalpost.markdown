@@ -1,6 +1,6 @@
 ---
 title:  "Decode Bengali: final post"
-date:   2020-03-04
+date:   2020-03-03
 tags: [Kaggle]
 header:
   image: "images/bengali.png"
@@ -98,7 +98,7 @@ The model architecture was borrowed from this [kernel](https://www.kaggle.com/nx
 ***
 ### Ensemble
 
-We ensemble three models from above and one model from this [kernel](https://www.kaggle.com/h030162/version1-0-9696) and achieved a slightly higher score of 0.9702. 
+We ensemble three models from above and one model from this [kernel](https://www.kaggle.com/h030162/version1-0-9696) using average logits value from four softmax output and choose the label based on averaged value. Ensembling code was also from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing). This increased our highest score to 0.9702. 
 
 ```python
 preds1 = model1.predict_generator(data_generator_test)
@@ -117,6 +117,83 @@ for i, image_id in zip(range(len(test_files)), test_files):
             targets.append(sub_pred_value)
 ```
 
-Current ranking: 330/1861, top 18%.
+Current ranking: 420/1820, top 23%.
 
-Next steps: we are still tuning our DenseNet-121 model with image input of 224 * 224 * 3. Will try out some newest state-of-the-art data augmentation techniques used by top team: cutout, cutmix, etc.      
+**Next steps** we are still tuning our DenseNet-121 model with image input of 224 * 224 * 3. We have decided to use a more powerful GPU on our GCP instance since our last epoch crashed. Based on the discussion [post](https://www.kaggle.com/c/bengaliai-cv19/discussion/123198#735506) of some most competent players, in order to achieve a score of 0.975 or higher, we probably need to use pretrained models which only accept input size of [3, 224, 224]. Also, it'll be exciting to see how our model will improve if we use the newest state-of-the-art data augmentation techniques used by players in the gold zone, such as cutout, cutmix, mixup etc. Discussion can be find [here](https://www.kaggle.com/c/bengaliai-cv19/discussion/127976).  
+
+Current working code: image processing (pytorch)
+
+```python 
+print(pretrainedmodels.pretrained_settings['densenet121'])
+train_transform = transforms.Compose([#transforms.Lambda(crop_resize),
+                                      transforms.Lambda(lambda x: crop_resize(x, size=224)),
+                                      transforms.Lambda(lambda x: np.stack([x, x, x], axis=2)),
+                                      transforms.ToPILImage('RGB'),
+                                      transforms.RandomRotation(30),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
+
+test_transforms = transforms.Compose([transforms.Lambda(lambda x: crop_resize(x, size=224)),
+                                      transforms.Lambda(lambda x: np.stack([x, x, x], axis=2)),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize([0.485, 0.456, 0.406],
+                                                           [0.229, 0.224, 0.225])])
+```
+{'imagenet': {'input_space': 'RGB', 'std': [0.229, 0.224, 0.225], 'input_size': [3, 224, 224], 'url': 'http://data.lip6.fr/cadene/pretrainedmodels/densenet121-fbdb23505.pth', 'mean': [0.485, 0.456, 0.406], 'input_range': [0, 1], 'num_classes': 1000}}
+
+Current working code: training (pytorch)
+
+```python
+for epoch in range(epochs):
+    dataloaders = make_loader(data_folder = train_df,
+                                            batch_size=8,
+                                            num_workers = 2,
+                                            is_shuffle = False)
+    accuracy1 = 0
+    accuracy2 = 0
+    accuracy3 = 0
+    running_loss = 0
+    running_loss1 = 0
+    running_loss2 = 0
+    running_loss3 = 0
+    for images, labels in tqdm(dataloaders):
+        steps += 1
+        # Move input and label tensors to the default device
+        images, labels = images.to(device), labels.to(device)
+        label1 = labels[:,0]
+        label2 = labels[:,1]
+        label3 = labels[:,2]
+
+        optimizer.zero_grad()
+        
+        ps = model.forward(images)
+        logit1, logit2, logit3 = ps[:,: 168],\
+                                    ps[:,168: 168+11],\
+                                    ps[:,168+11:]
+        top_p1, top_class1 = logit1.topk(1, dim=1)
+        equals = top_class1 == label1.view(*top_class1.shape)
+        accuracy1 += torch.mean(equals.type(torch.FloatTensor))
+        top_p2, top_class2 = logit2.topk(1, dim=1)
+        equals = top_class2 == label2.view(*top_class2.shape)
+        accuracy2 += torch.mean(equals.type(torch.FloatTensor))
+        top_p3, top_class3 = logit3.topk(1, dim=1)
+        equals = top_class3 == label3.view(*top_class3.shape)
+        accuracy3 += torch.mean(equals.type(torch.FloatTensor))
+        loss1, loss2, loss3 = criterion1(logit1, label1),criterion2(logit2, label2),criterion3(logit3, label3)
+        
+        #print(loss1)
+        (0.5*loss1 + 0.25*loss2 + 0.25*loss3).backward()
+        
+        optimizer.step()
+
+        running_loss1 += loss1.item()
+        running_loss2 += loss2.item()
+        running_loss3 += loss2.item()
+        running_loss = 0.5*running_loss1 + 0.25*running_loss2 + 0.25*running_loss3
+    print("Epoch: {}/{}.. ".format(epoch+1, epochs),
+              "Training Loss: {:.3f}.. ".format(running_loss/len(dataloaders)),
+              "Train1 Accuracy: {:.3f}".format(accuracy1/len(dataloaders)),
+              "Train2 Accuracy: {:.3f}".format(accuracy2/len(dataloaders)),
+              "Train3 Accuracy: {:.3f}".format(accuracy3/len(dataloaders)))
+```
