@@ -20,7 +20,7 @@ To boost the performance of our model, we tried several newer models with more c
 
 ResNet (Residual Neural Network) is an artificial neural network which builds on a convolutional neural network. It uses skip connections to build a shortcut to send the input past several convolutional layers.  
 
-**Why ResNet**: 
+**Why ResNet**
 In image classification problems, it is common to use CNN to solve these problems. Especially, as the depth of the network and the complexity of the model increase, the network performs better and predicts more accurately. However, as the number of layers increases, another problem might arise. If the network is too deep, the gradients from where the loss function is calculated easily shrink to zero after several applications of the chain rule. There would be nearly no update on the value and therefore, no learning is being performed. ResNet could solve this vanishing gradient problem as it reuses activations from a previous layer until the adjacent layer learns its weights. Also, after solving the problem of vanishing gradients, ResNet will speed up the training process as well.
 
 **Construction**
@@ -41,7 +41,8 @@ After flattening, the overall LB score of the ResNet is 0.957.
 ***
 ### EfficientNetB3
 
-LB Performance: 0.9681
+LB Score: 0.9681   
+
 We know that usually a CNN with a larger number of layers can hold richer details about the image and therefore is usually more accurate than a model with a fewer number of layers. Using wider CNN and an image with larger input size could lead to higher accuracy, but the gain in accuracy tends to saturate after certain threshold. 
 
 With limited computing resources, we want to strike a balance between model depth, model width, and image resolution and build a model that achieves a satisfactory score without using too much computing power. 
@@ -91,10 +92,13 @@ model.compile(optimizer = Adam(lr = 0.00016),
                             'vowel': ['accuracy', tf.keras.metrics.Recall()],
                             'consonant': ['accuracy', tf.keras.metrics.Recall()] })
 ```
+
+The model architecture was borrowed from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing).
+
 ***
 ### Ensemble
 
-We ensemble three models from above and one model from this kernel (borrowed) and achieved a slightly higher score of 0.9703. 
+We ensemble three models from above and one model from this [kernel](https://www.kaggle.com/h030162/version1-0-9696) and achieved a slightly higher score of 0.9702. 
 
 ```python
 preds1 = model1.predict_generator(data_generator_test)
