@@ -27,7 +27,7 @@ In image classification problems, it is common to use CNN to solve these problem
 Now, let us take a look at the Residual Neural Network we trained to classify the Bengali graphemes. We read the data and resized them as we did before. At first, we constructed 3 layers, in each of which there are 32 feature maps and the kernel has a size of 3. We also choose zero padding to maintain the size of the inputs and the ReLu activation. Then, after batch normalization and max pooling, we built another layer, which includes 32 feature maps as before but with the size of filter equal to 5. Then, we did dropout with the dropout rate equal to 0.3. That was how we did regularization. 
 Then, we started to construct layers of 64 feature maps. The first two of such layers had 3 by 3 filters, while the third layer had 5 by 5 filters. We also added zero padding and ReLu activation methods. At the end of the third layer, we did dropout again.
 After building the basic layers, we extended the network with the residual unit. 
-![alt text](https://i.ibb.co/zfB5CVM/r2.png)
+![alt text](https://i.ibb.co/q9wb076/r2.png)
 
 In the first unit, we had two convolutional layers. Each layer had 128 feature maps and each filter had a size of 3. But one thing we need to notice is that the first layer had the stride equal to 2. Thus, we had to make a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. Then, we continued to construct 4 similar units. The only difference was that all the strides were set to one and the skip connection was set to the identity function. 
 Later, we constructed 6 more units, similar to what we just did before. In the first unit, the first layer was constructed and it contained two convolutional layers. Both of the layers had 256 feature maps with 3 by 3 filters. It was just that the first layer’s stride was 2, while the second filter had stride equal to 1. Then, we made a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. We also made 5 more similar units. They were the same as the first unit except that all the strides were set to one and the skip connection function was equal to identity. 
@@ -41,7 +41,7 @@ After flattening, the overall LB score of the ResNet is 0.957.
 ***
 ### EfficientNetB3
 
-LB Score: 0.9681   
+Single Model: 96.81%   
 
 We know that usually a CNN with a larger number of layers can hold richer details about the image and therefore is usually more accurate than a model with a fewer number of layers. Using wider CNN and an image with larger input size could lead to higher accuracy, but the gain in accuracy tends to saturate after certain threshold. 
 
@@ -117,9 +117,13 @@ for i, image_id in zip(range(len(test_files)), test_files):
             targets.append(sub_pred_value)
 ```
 
-Current ranking: 420/1820, top 23%.
+Current ranking: 421/1820, top 23%.
 
-**Next steps** we are still tuning our DenseNet-121 model with image input of 224 * 224 * 3. We have decided to use a more powerful GPU on our GCP instance since our last epoch crashed. Based on the discussion [post](https://www.kaggle.com/c/bengaliai-cv19/discussion/123198#735506) of some most competent players, in order to achieve a score of 0.975 or higher, we probably need to use pretrained models which only accept input size of [3, 224, 224]. Also, it'll be exciting to see how our model will improve if we use the newest state-of-the-art data augmentation techniques used by players in the gold zone, such as cutout, cutmix, mixup etc. Discussion can be find [here](https://www.kaggle.com/c/bengaliai-cv19/discussion/127976).  
+![alt text](https://i.ibb.co/Jq10s7W/kaggleentry.png)
+
+
+**Next steps**      
+We are still tuning our DenseNet-121 model with image input of 224 * 224 * 3. We have decided to use a more powerful GPU on our GCP instance since our working code crashed after 2 epochs. Based on the discussion [post](https://www.kaggle.com/c/bengaliai-cv19/discussion/123198#735506) of some most competent players, in order to achieve a score of 0.975 or higher, we probably need to use pretrained models which only accept input size of [3, 224, 224]. Also, it'll be exciting to see how our model will improve if we use the newest state-of-the-art data augmentation techniques used by players in the gold zone, such as cutout, cutmix, mixup etc. Discussion can be find [here](https://www.kaggle.com/c/bengaliai-cv19/discussion/127976).  
 
 Current working code: image processing (pytorch)
 
@@ -182,7 +186,6 @@ for epoch in range(epochs):
         accuracy3 += torch.mean(equals.type(torch.FloatTensor))
         loss1, loss2, loss3 = criterion1(logit1, label1),criterion2(logit2, label2),criterion3(logit3, label3)
         
-        #print(loss1)
         (0.5*loss1 + 0.25*loss2 + 0.25*loss3).backward()
         
         optimizer.step()
