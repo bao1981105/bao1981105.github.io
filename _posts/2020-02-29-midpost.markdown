@@ -1,0 +1,39 @@
+---
+title:  "Decode Bengali: Midway post"
+date:   2020-02-29
+tags: [Kaggle]
+header:
+  image: "images/bengali.png"
+  caption: "Photo Credit: hindustantimes"
+
+excerpt: "Bengali.AI Handwritten Grapheme Classification competition"
+---
+
+The first model, a plain vanilla CNN model achieves a score of 0.9516. Its architecture is shown below. 
+![alt text](https://i.ibb.co/19XdnQR/architecture.png "baseline")
+
+***   
+To boost the performance of our model, we first tried ResNet architecture. 
+
+### ResNet
+![alt text](https://i.ibb.co/3dMJxLT/r1.png)
+
+ResNet (Residual Neural Network) is an artificial neural network which builds on a convolutional neural network. It uses skip connections to build a shortcut to send the input past several convolutional layers.  
+
+**Why ResNet**
+In image classification problems, it is common to use CNN to solve these problems. Especially, as the depth of the network and the complexity of the model increase, the network performs better and predicts more accurately. However, as the number of layers increases, another problem might arise. If the network is too deep, the gradients from where the loss function is calculated easily shrink to zero after several applications of the chain rule. There would be nearly no update on the value and therefore, no learning is being performed. ResNet could solve this vanishing gradient problem as it reuses activations from a previous layer until the adjacent layer learns its weights. Also, after solving the problem of vanishing gradients, ResNet will speed up the training process as well.
+
+**Construction**
+Now, let us take a look at the Residual Neural Network we trained to classify the Bengali graphemes. We read the data and resized them as we did before. At first, we constructed 3 layers, in each of which there are 32 feature maps and the kernel has a size of 3. We also choose zero padding to maintain the size of the inputs and the ReLu activation. Then, after batch normalization and max pooling, we built another layer, which includes 32 feature maps as before but with the size of filter equal to 5. Then, we did dropout with the dropout rate equal to 0.3. That was how we did regularization. 
+Then, we started to construct layers of 64 feature maps. The first two of such layers had 3 by 3 filters, while the third layer had 5 by 5 filters. We also added zero padding and ReLu activation methods. At the end of the third layer, we did dropout again.
+After building the basic layers, we extended the network with the residual unit. 
+![alt text](https://i.ibb.co/q9wb076/r2.png)
+
+In the first unit, we had two convolutional layers. Each layer had 128 feature maps and each filter had a size of 3. But one thing we need to notice is that the first layer had the stride equal to 2. Thus, we had to make a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. Then, we continued to construct 4 similar units. The only difference was that all the strides were set to one and the skip connection was set to the identity function. 
+Later, we constructed 6 more units, similar to what we just did before. In the first unit, the first layer was constructed and it contained two convolutional layers. Both of the layers had 256 feature maps with 3 by 3 filters. It was just that the first layer’s stride was 2, while the second filter had stride equal to 1. Then, we made a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. We also made 5 more similar units. They were the same as the first unit except that all the strides were set to one and the skip connection function was equal to identity. 
+
+To make the network computationally stronger, we constructed 7 more units, almost repeating the previous process. In the first unit, the first layer was constructed and it contained two convolutional layers. Both of the layers had 512 feature maps with 3 by 3 filters. It was just that the first layer’s stride was 2, while the second filter had stride equal to 1. Then, we made a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. We continued to produce 6 more similar units. They were the same as the first unit except that all the strides were set to one and the skip connection function was equal to identity. 
+In summary, we constructed 5+6+7=18 residual units and we had 18X2=36 convolutional layers in total.
+After flattening, the overall LB score of the ResNet is 0.957.
+
+![alt text](https://i.ibb.co/cgmhskt/r3.png)
