@@ -16,7 +16,7 @@ The first model, a plain vanilla CNN model achieves a score of 0.9516. Its archi
 To boost the performance of our model, we tried several newer models with more complex architecture. After testing out that our models can train, we used the virtual machine (GPU: NVIDIA Tesla P100) on GCP to do the heavy lifting for us and let it train for hours. After the training is done, we will save the model weights and load it to Kaggle for inference. 
 
 ### ResNet
-![alt text](https://i.ibb.co/3dMJxLT/r1.png)
+![alt text](https://i.ibb.co/7bgpQ3M/r1.png)
 
 ResNet (Residual Neural Network) is an artificial neural network which builds on a convolutional neural network. It uses skip connections to build a shortcut to send the input past several convolutional layers.  
 
@@ -36,7 +36,7 @@ To make the network computationally stronger, we constructed 7 more units, almos
 In summary, we constructed 5+6+7=18 residual units and we had 18X2=36 convolutional layers in total.
 After flattening, the overall LB score of the ResNet is 0.957.
 
-![alt text](https://i.ibb.co/cgmhskt/r3.png)
+![alt text](https://i.ibb.co/rZF538s/r3.png)
 
 ***
 ### EfficientNetB3
