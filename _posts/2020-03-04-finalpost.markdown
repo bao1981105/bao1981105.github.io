@@ -41,13 +41,11 @@ After flattening, the overall LB score of the ResNet is 0.957.
 ***
 ### EfficientNetB3
 
-Single Model: 96.81%   
-
 We know that usually a CNN with a larger number of layers can hold richer details about the image and therefore is usually more accurate than a model with a fewer number of layers. Using wider CNN and an image with larger input size could lead to higher accuracy, but the gain in accuracy tends to saturate after certain threshold. 
 
 With limited computing resources, we want to strike a balance between model depth, model width, and image resolution and build a model that achieves a satisfactory score without using too much computing power. 
 
-Image processing: simple resize, shrink the image from 137 * 236 to 95 * 165 （preserves ratio instead of crop center), we have not used data augmentation this time. 
+Image processing: simple resize, shrink the image from 137 X 236 to 95 X 165 （preserves ratio instead of crop center), we have not used data augmentation. 
 
 ```python
 def resize_image(img, w, h, new_w, new_h):
@@ -58,8 +56,8 @@ def resize_image(img, w, h, new_w, new_h):
     return image_resized    
 ```
 
-Training process: we use stratified k fold, and allocate 1/6 of training images to to validation set and 5/6 to training set, train for 50 epochs, and a batch_size of 56. If after 5 consecutive epochs, validation loss for the root is still higher than previous lowest level, reduce the learning rate by 25% until it reaches the minimum of 1e-5. 
-
+Training process: A smaller image was used this time, train for 80 epochs, and used a smaller batch_size of 56. Also, loss weight distribution is 0.4 to root, 0.3 to vowel, and 0.3 to consonant this time. We did not observe the loss metric fluctuation this time. 
+![alt text](https://i.ibb.co/2gdWPMg/Train1-Loss-And-Accuracy-Final.png)
 
 ```python
 input = Input(shape = input_shape)
@@ -80,25 +78,13 @@ consonant_diacritic = Dense(7, activation = 'softmax', name = 'consonant')(x)
 
 model = Model(inputs = x_model.input, outputs = [grapheme_root, vowel_diacritic, consonant_diacritic])
 ```
-```python
-model.compile(optimizer = Adam(lr = 0.00016),
-                loss = {'root': 'categorical_crossentropy',
-                        'vowel': 'categorical_crossentropy',
-                        'consonant': 'categorical_crossentropy'},
-                loss_weights = {'root': 0.40,        
-                                'vowel': 0.30,
-                                'consonant': 0.30},
-                metrics = {'root': ['accuracy', tf.keras.metrics.Recall()],
-                            'vowel': ['accuracy', tf.keras.metrics.Recall()],
-                            'consonant': ['accuracy', tf.keras.metrics.Recall()] })
-```
 
 The model architecture was borrowed from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing).
 
 ***
 ### Ensemble
 
-We ensemble three models from above and one model from this [kernel](https://www.kaggle.com/h030162/version1-0-9696) using average logits value from four softmax output and choose the label based on averaged value. Ensembling code was also from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing). This increased our highest score to 0.9702. 
+We ensemble three models from above and one model from this [kernel](https://www.kaggle.com/h030162/version1-0-9696) using average logits value from four softmax output and choose the label based on averaged value. Ensembling code was also from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing). This increased our highest score to 0.97. 
 
 ```python
 preds1 = model1.predict_generator(data_generator_test)
@@ -146,57 +132,6 @@ test_transforms = transforms.Compose([transforms.Lambda(lambda x: crop_resize(x,
 ```
 {'imagenet': {'input_space': 'RGB', 'std': [0.229, 0.224, 0.225], 'input_size': [3, 224, 224], 'url': 'http://data.lip6.fr/cadene/pretrainedmodels/densenet121-fbdb23505.pth', 'mean': [0.485, 0.456, 0.406], 'input_range': [0, 1], 'num_classes': 1000}}
 
-Current working code: training (pytorch)
+Current working code which crashed after 2 epochs was published in our [repo](https://github.com/bao1981105/decode-bengali/blob/master/dense121.ipynb). 
 
-```python
-for epoch in range(epochs):
-    dataloaders = make_loader(data_folder = train_df,
-                                            batch_size=8,
-                                            num_workers = 2,
-                                            is_shuffle = False)
-    accuracy1 = 0
-    accuracy2 = 0
-    accuracy3 = 0
-    running_loss = 0
-    running_loss1 = 0
-    running_loss2 = 0
-    running_loss3 = 0
-    for images, labels in tqdm(dataloaders):
-        steps += 1
-        # Move input and label tensors to the default device
-        images, labels = images.to(device), labels.to(device)
-        label1 = labels[:,0]
-        label2 = labels[:,1]
-        label3 = labels[:,2]
-
-        optimizer.zero_grad()
-        
-        ps = model.forward(images)
-        logit1, logit2, logit3 = ps[:,: 168],\
-                                    ps[:,168: 168+11],\
-                                    ps[:,168+11:]
-        top_p1, top_class1 = logit1.topk(1, dim=1)
-        equals = top_class1 == label1.view(*top_class1.shape)
-        accuracy1 += torch.mean(equals.type(torch.FloatTensor))
-        top_p2, top_class2 = logit2.topk(1, dim=1)
-        equals = top_class2 == label2.view(*top_class2.shape)
-        accuracy2 += torch.mean(equals.type(torch.FloatTensor))
-        top_p3, top_class3 = logit3.topk(1, dim=1)
-        equals = top_class3 == label3.view(*top_class3.shape)
-        accuracy3 += torch.mean(equals.type(torch.FloatTensor))
-        loss1, loss2, loss3 = criterion1(logit1, label1),criterion2(logit2, label2),criterion3(logit3, label3)
-        
-        (0.5*loss1 + 0.25*loss2 + 0.25*loss3).backward()
-        
-        optimizer.step()
-
-        running_loss1 += loss1.item()
-        running_loss2 += loss2.item()
-        running_loss3 += loss2.item()
-        running_loss = 0.5*running_loss1 + 0.25*running_loss2 + 0.25*running_loss3
-    print("Epoch: {}/{}.. ".format(epoch+1, epochs),
-              "Training Loss: {:.3f}.. ".format(running_loss/len(dataloaders)),
-              "Train1 Accuracy: {:.3f}".format(accuracy1/len(dataloaders)),
-              "Train2 Accuracy: {:.3f}".format(accuracy2/len(dataloaders)),
-              "Train3 Accuracy: {:.3f}".format(accuracy3/len(dataloaders)))
-```
+Thanks for reading!

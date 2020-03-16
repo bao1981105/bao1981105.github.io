@@ -14,10 +14,6 @@ The first model, a plain vanilla CNN model achieves a score of 0.9516. Its archi
 
 ***   
 To boost the performance of our model, we first tried ResNet architecture. 
-
-### ResNet
-![alt text](https://i.ibb.co/7bgpQ3M/r1.png)
-
 ResNet (Residual Neural Network) is an artificial neural network which builds on a convolutional neural network. It uses skip connections to build a shortcut to send the input past several convolutional layers.  
 
 **Why ResNet**
@@ -35,5 +31,45 @@ Later, we constructed 6 more units, similar to what we just did before. In the f
 To make the network computationally stronger, we constructed 7 more units, almost repeating the previous process. In the first unit, the first layer was constructed and it contained two convolutional layers. Both of the layers had 512 feature maps with 3 by 3 filters. It was just that the first layer’s stride was 2, while the second filter had stride equal to 1. Then, we made a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. We continued to produce 6 more similar units. They were the same as the first unit except that all the strides were set to one and the skip connection function was equal to identity. 
 In summary, we constructed 5+6+7=18 residual units and we had 18X2=36 convolutional layers in total.
 After flattening, the overall LB score of the ResNet is 0.957.
+Our code can be found [here](https://colab.research.google.com/drive/1rfFrO_tUCwKmT-rsUPAJV9IwA2oasgel).    
 
-![alt text](https://i.ibb.co/rZF538s/r3.png)
+***   
+
+**EfficientNet B3** 
+We also tried EfficientNetB3 based on the idea from this [kernel](https://www.kaggle.com/rsmits/keras-efficientnet-b3-training-inference). 
+
+Image processing: simple resize, shrink the image from 137 X 236 to 95 X 165 （preserves ratio instead of crop center), we have not used data augmentation. 
+
+```python
+def resize_image(img, w, h, new_w, new_h):
+    img = 255 - img
+    img = (img * (255.0 / img.max())).astype(np.uint8)
+    img = img.reshape(h, w)
+    image_resized = cv2.resize(img, (new_w, new_h), interpolation = cv2.INTER_AREA)
+    return image_resized    
+```
+
+
+```python
+model.compile(optimizer = Adam(lr = 0.00016),
+                loss = {'root': 'categorical_crossentropy',
+                        'vowel': 'categorical_crossentropy',
+                        'consonant': 'categorical_crossentropy'},
+                loss_weights = {'root': 0.50,        
+                                'vowel': 0.25,
+                                'consonant': 0.25},
+                metrics = {'root': ['accuracy', tf.keras.metrics.Recall()],
+                            'vowel': ['accuracy', tf.keras.metrics.Recall()],
+                            'consonant': ['accuracy', tf.keras.metrics.Recall()] })
+```
+
+This was trained on a GCP virtual instance. We published our source code and training notebook to our [repo](https://github.com/bao1981105/decode-bengali/blob/master/EfficientNet/eff_train.ipynb).
+
+We trained on a batch size of 112, and image size of 109 X 188 X 3. For the train test split, stratified K fold was used. We allocated 1/6 of training images to to validation set and 5/6 to training set. Actually, the split generator would generate different train and test distribution for every epoch. Because based on the suggestion from public score leaders, using this method will generalize to test data better. If after 5 consecutive epochs, validation loss for the root is still higher than previous lowest level, we would reduce the learning rate by 25% until it reaches the minimum of 1e-5. 
+
+From the training log printouts, we can see that after training for 27 epochs, the learning rate was was reduced to the minimum level of 0.00001 and moved slowly. Another interesting phenomenon is that the loss metrics fluctuate greatly during the training process, but after the 20th epoch, the accuracy scores increase steadily. 
+![alt text](https://i.ibb.co/3c8svd6/Train1-Loss-And-Accuracy.png)
+
+The model weight from the 36th epoch was submitted and got a score of 0.93. 
+![alt text](https://i.ibb.co/zPzVS0R/Screen-Shot-2020-03-16-at-1-33-29-PM.png)
+We will need to tune our training parameter further and restart the training process again.
