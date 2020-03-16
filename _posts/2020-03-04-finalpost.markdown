@@ -9,7 +9,7 @@ header:
 excerpt: "Bengali.AI Handwritten Grapheme Classification competition"
 ---
 
-The first model, a plain vanilla CNN model achieves a score of 0.9516. Its architecture is shown below. 
+The first model, a plain vanilla CNN model achieves a score of 0.9516. Its architecture is shown below. We also tried ResNet (0.957), EfficientNetB3(0.97), and DenseNet121(0.97 plus, maybe).
 ![alt text](https://i.ibb.co/19XdnQR/architecture.png "baseline")
 
 ***   
@@ -34,7 +34,7 @@ Later, we constructed 6 more units, similar to what we just did before. In the f
 
 To make the network computationally stronger, we constructed 7 more units, almost repeating the previous process. In the first unit, the first layer was constructed and it contained two convolutional layers. Both of the layers had 512 feature maps with 3 by 3 filters. It was just that the first layer’s stride was 2, while the second filter had stride equal to 1. Then, we made a convolutional layer in the skip connection to match the size of the output after the skip step and the size of the output after the two layers. We continued to produce 6 more similar units. They were the same as the first unit except that all the strides were set to one and the skip connection function was equal to identity. 
 In summary, we constructed 5+6+7=18 residual units and we had 18X2=36 convolutional layers in total.
-After flattening, the overall LB score of the ResNet is 0.957.
+After flattening, the overall LB score of the ResNet is 0.957. Our notebook was made public [here](https://www.kaggle.com/fakegeek1981105/resnet34-xh).
 
 ![alt text](https://i.ibb.co/rZF538s/r3.png)
 
@@ -109,7 +109,9 @@ Current ranking: 421/1820, top 23%.
 
 
 **Next steps**      
-We are still tuning our DenseNet-121 model with image input of 224 * 224 * 3. We have decided to use a more powerful GPU on our GCP instance since our working code crashed after 2 epochs. Based on the discussion [post](https://www.kaggle.com/c/bengaliai-cv19/discussion/123198#735506) of some most competent players, in order to achieve a score of 0.975 or higher, we probably need to use pretrained models which only accept input size of [3, 224, 224]. Also, it'll be exciting to see how our model will improve if we use the newest state-of-the-art data augmentation techniques used by players in the gold zone, such as cutout, cutmix, mixup etc. Discussion can be find [here](https://www.kaggle.com/c/bengaliai-cv19/discussion/127976).  
+We are still tuning our DenseNet-121 model with image input of 224 * 224 * 3. We have decided to use a more powerful GPU on our GCP instance since our working code crashed after 2 epochs. Based on the discussion [post](https://www.kaggle.com/c/bengaliai-cv19/discussion/123198#735506) of some most competent players, in order to achieve a score of 0.975 or higher, we probably need to use pretrained models which only accept input size of [3, 224, 224]. 
+
+Also, it'll be exciting to see how our model will improve if we use the newest state-of-the-art data augmentation techniques used by players in the gold zone, such as cutout, cutmix, mixup etc. Discussion can be find [here](https://www.kaggle.com/c/bengaliai-cv19/discussion/127976).  
 
 Current working code: image processing (pytorch)
 
@@ -132,6 +134,6 @@ test_transforms = transforms.Compose([transforms.Lambda(lambda x: crop_resize(x,
 ```
 {'imagenet': {'input_space': 'RGB', 'std': [0.229, 0.224, 0.225], 'input_size': [3, 224, 224], 'url': 'http://data.lip6.fr/cadene/pretrainedmodels/densenet121-fbdb23505.pth', 'mean': [0.485, 0.456, 0.406], 'input_range': [0, 1], 'num_classes': 1000}}
 
-Current working code which crashed after 2 epochs was published in our [repo](https://github.com/bao1981105/decode-bengali/blob/master/dense121.ipynb). 
+Current working code which crashed after 2 epochs was published in our [repo](https://github.com/bao1981105/decode-bengali/blob/master/dense121.ipynb). It is actually converging very fast. 
 
 Thanks for reading!
