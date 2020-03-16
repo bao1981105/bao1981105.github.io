@@ -38,7 +38,7 @@ Our code can be found [here](https://colab.research.google.com/drive/1rfFrO_tUCw
 **EfficientNet B3** 
 We also tried EfficientNetB3 based on the idea from this [kernel](https://www.kaggle.com/rsmits/keras-efficientnet-b3-training-inference). 
 
-Image processing: simple resize, shrink the image from 137 X 236 to 95 X 165 （preserves ratio instead of crop center), we have not used data augmentation. 
+Image processing: simple resize, shrink the image from 137 X 236 to 109 X 188 （preserves ratio instead of crop center), we have not used data augmentation. 
 
 ```python
 def resize_image(img, w, h, new_w, new_h):
