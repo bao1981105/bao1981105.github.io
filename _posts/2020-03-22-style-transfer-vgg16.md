@@ -196,12 +196,6 @@ Inside the iteration loop, calculate the content and style losses and update tar
 The content loss will be the mean squared difference between the target and content features at layer conv4_2. The style loss is calculated in a similar way, only you have to iterate through a number of layers, specified by name in the dictionary style_weights. Finally, create the total loss by adding up the style and content losses and weighting them with your specified alpha and beta.
 
 
-
-There are some statistical concerns with this function, and first among them is the fact that I'm simply ignoring situations in which a decision threshold of 0.97 (for example) would result in no positive class predictions. This matters, but since we're trying to be quick and dirty it's fine as it is.
-
-With these functions defined, I'm ready to run my experiment. I'll wrap these into a single `main` function and collect the precision and recall data for every iteration.
-
-
 ```python
 # for displaying the target image, intermittently
 show_every = 400
