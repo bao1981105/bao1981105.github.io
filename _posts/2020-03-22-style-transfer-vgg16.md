@@ -141,7 +141,6 @@ def gram_matrix(tensor):
         Gram Matrix: https://en.wikipedia.org/wiki/Gramian_matrix
     """
     
-    ## get the batch_size, depth, height, and width of the Tensor
     batch_size, d, h, w = tensor.size()
     ## reshape it, so we're multiplying the features for each channel
     matrix = tensor.view(d, h * w)
@@ -161,9 +160,6 @@ style_features = get_features(style, vgg)
 # calculate the gram matrices for each layer of our style representation
 style_grams = {layer: gram_matrix(style_features[layer]) for layer in style_features}
 
-# create a third "target" image and prep it for change
-# it is a good idea to start of with the target as a copy of the content image
-# then iteratively change its style
 target = content.clone().requires_grad_(True).to(device)
 ```
 
@@ -261,7 +257,7 @@ ax2.imshow(im_convert(target))
 
 ![alt text](https://i.ibb.co/L8xLDTg/finalcontent.png "final target image")
 
-Does this look better?
+Does this look better? For the whole "training process", check out my [repo](https://github.com/bao1981105/style-transfer/blob/master/Style_Transfer_Walkthrough.ipynb).  
 
 Reference:
 [Udacity deep learning repo](https://github.com/udacity/deep-learning-v2-pytorch)
