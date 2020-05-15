@@ -9,7 +9,7 @@ header:
 excerpt: "Bengali.AI Handwritten Grapheme Classification competition"
 ---
 
-The first model, a plain vanilla CNN model achieves a score of 0.9516. Its architecture is shown below. We also tried ResNet (0.957), EfficientNetB3(0.97), and DenseNet121(0.97 plus, maybe).
+The first model, a plain vanilla CNN model achieves a score of 0.9516. Its architecture is shown below. We also tried ResNet (0.957), EfficientNetB3(0.97), and DenseNet121(not submitted for scoring).
 ![alt text](https://i.ibb.co/19XdnQR/architecture.png "baseline")
 
 ***   
@@ -79,12 +79,12 @@ consonant_diacritic = Dense(7, activation = 'softmax', name = 'consonant')(x)
 model = Model(inputs = x_model.input, outputs = [grapheme_root, vowel_diacritic, consonant_diacritic])
 ```
 
-The model architecture was borrowed from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing).
+The model architecture was borrowed from the Kaggle kernel [Keras EfficientNet B3 with image preprocessing](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing).
 
 ***
 ### Ensemble
 
-We ensemble three models from above and one model from this [kernel](https://www.kaggle.com/h030162/version1-0-9696) using average logits value from four softmax output and choose the label based on averaged value. Ensembling code was also from this [kernel](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing). This increased our highest score to 0.97. 
+We ensemble three models from above and one model loaded from [Hanjin's kernel](https://www.kaggle.com/h030162/version1-0-9696) using average logits value from four softmax output and choose the label based on averaged value. The simple averaging method ensembling code was also largely borrowed from [Keras EfficientNet B3 with image preprocessing](https://www.kaggle.com/nxrprime/keras-efficientnet-b3-with-image-preprocessing). This increased our highest public score to 0.97. 
 
 ```python
 preds1 = model1.predict_generator(data_generator_test)
